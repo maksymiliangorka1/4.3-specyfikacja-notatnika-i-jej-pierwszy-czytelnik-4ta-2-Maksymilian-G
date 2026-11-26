@@ -5,7 +5,7 @@
 Plan został opracowany na podstawie następujących dokumentów projektowych:
 1. `konstytucja.md` – nadrzędne, nienegocjowalne reguły architektoniczne projektu Notatnik-V2.
 2. `decyzje/0001-format-pliku-notatek.md` – decyzja architektoniczna (ADR) ustanawiająca format Markdown (`.md`) z kodowaniem UTF-8 i strukturą nagłówków.
-3. `specs/001-notatnik/spec.md` – specyfikacja funkcjonalna definiująca zakres modułu, interakcje użytkownika oraz kryteria akceptacji.
+3. `specs/001-notatnik/spec.md` – specyfikacja funkcjonalna definiująca zakres modułu, interakcje użytkownika oraz kryteria akceptacji (zaktualizowana po przeglądzie Pierwszego Czytelnika).
 
 ---
 
@@ -43,9 +43,9 @@ src/
     │   └── MarkdownNoteStorageService.cs# Implementacja I/O pliku Markdown w UTF-8 z bezpiecznym zapisem atomowym
     ├── ViewModels/
     │   ├── ViewModelBase.cs             # Klasa bazowa INotifyPropertyChanged
-    │   └── MainViewModel.cs             # Główny ViewModel: kolekcja notatek, walidacja, komendy
+    │   └── MainViewModel.cs             # Główny ViewModel: kolekcja notatek, walidacja, cykl formularza
     └── Views/
-        ├── MainWindow.axaml             # Deklaracja widoku UI: lista notatek, formularz, podgląd
+        ├── MainWindow.axaml             # Deklaracja widoku UI: lewy panel listy, formularz, podgląd ze stanem pustym
         └── MainWindow.axaml.cs          # Code-behind okna głównego
 ```
 
@@ -64,11 +64,11 @@ Prace programistyczne zostaną przeprowadzone w pięciu kolejnych fazach:
 1. Utworzenie klasy modelu `Note.cs` (właściwości: `Title`, `Content`, `CreatedAt`).
 2. Implementacja parsera Markdown w `MarkdownNoteStorageService.cs`:
    - Zapewnienie kodowania `Encoding.UTF8`.
-   - Odczyt nagłówków formatu `## YYYY-MM-DD HH:mm — Tytuł`.
-   - Ochrona parsera przed rozbijaniem wpisów w przypadku wystąpienia nagłówków Markdown w treści notatki.
+   - Odczyt i parsowanie ustandaryzowanego nagłówka `## YYYY-MM-DD HH:mm — Tytuł`.
+   - Ochrona parsera przed rozbijaniem wpisów w przypadku wystąpienia znaczników Markdown w treści notatki.
 3. Implementacja bezpiecznego zapisu atomowego:
    - Zapis nowej notatki do pliku tymczasowego (`notatki.md.tmp`).
-   - Atomowa podmiana lub dopisanie z zachowaniem integralności pliku głównego w razie błędu dyskowego.
+   - Atomowa podmiana lub bezpieczne dopisanie z zachowaniem integralności pliku bazy w razie przerwania zasilania lub błędu dyskowego.
 
 ### Faza 3: Warstwa ViewModel i logika biznesowa (MVVM)
 1. Implementacja `ViewModelBase.cs` ze wsparciem dla powiadomień o zmianie właściwości (`INotifyPropertyChanged`).
@@ -76,18 +76,18 @@ Prace programistyczne zostaną przeprowadzone w pięciu kolejnych fazach:
    - Kolekcja notatek typu `ObservableCollection<Note>` posortowana malejąco po dacie utworzenia.
    - Właściwości wejściowe dla formularza: `NewNoteTitle`, `NewNoteContent`.
    - Logika walidacji pustego tytułu (`CanSave` – aktywny tylko wtedy, gdy `!string.IsNullOrWhiteSpace(NewNoteTitle)`).
-   - Komenda zapisu notatki (`SaveNoteCommand`) z natychmiastowym dodaniem do kolekcji na pozycję 0.
-   - Właściwość wybranej notatki (`SelectedNote`) aktualizująca panel podglądu.
+   - Komenda zapisu notatki (`SaveNoteCommand`) z natychmiastowym dodaniem do kolekcji na pozycję 0, wyczyszczeniem pól formularza i zresetowaniem `CanSave`.
+   - Właściwość wybranej notatki (`SelectedNote`) aktualizująca panel podglądu z obsługą stanu pustego (gdy brak selekcji).
 
 ### Faza 4: Interfejs użytkownika w XAML (Avalonia UI)
 1. Przygotowanie responsywnego układu okna w `MainWindow.axaml`:
    - Lewy panel: Lista notatek (`ListBox`) z szablonem prezentującym tytuł pogrubioną czcionką oraz datę utworzenia.
-   - Prawy panel górny: Formularz tworzenia nowej notatki (pole tytułu `TextBox`, pole treści `TextBox` z zawijaniem wierszy, przycisk `Button` powiązany z komendą zapisu i walidacją).
-   - Prawy panel dolny: Panel podglądu wybranej notatki (`SelectedNote`).
+   - Prawy panel górny: Niezależny formularz tworzenia nowej notatki (pole tytułu `TextBox`, pole treści `TextBox` z zawijaniem wierszy, przycisk `Button` powiązany z komendą zapisu i walidacją).
+   - Prawy panel dolny: Panel podglądu wybranej notatki (`SelectedNote`) z komunikatem zachęty, gdy żadna notatka nie jest zaznaczona.
 2. Ustawienie wszystkich etykiet, nagłówków i tekstów interfejsu w języku polskim.
 
 ### Faza 5: Integracja, obsługa błędów i weryfikacja kryteriów
-1. Obsługa wyjątków I/O (`IOException`, `UnauthorizedAccessException`) z prezentacją czytelnych komunikatów po polsku.
+1. Obsługa wyjątków I/O (`IOException`, `UnauthorizedAccessException`) z prezentacją czytelnych komunikatów w języku polskim w dedykowanym pasku informacyjnym okna.
 2. Sprawdzenie czasu uruchomienia aplikacji (optymalizacja ładowania wstępnego, cel: < 2 sekundy).
 3. Wykonanie manualnych testów weryfikacyjnych dla 5 obowiązkowych kryteriów akceptacji.
 

@@ -21,31 +21,36 @@ Program jest przeznaczony dla:
 ## 3. Co robi
 
 1. **Tworzenie nowej notatki**:
-   - Udostępnia formularz z osobnym polem na tytuł notatki oraz osobnym polem na jej treść.
+   - Udostępnia formularz z osobnym, jednowierszowym polem na tytuł notatki oraz wielowierszowym polem na jej treść.
    - Umożliwia swobodne wprowadzanie tekstu w języku polskim ze wszystkimi znakami diakrytycznymi (`ą`, `ć`, `ę`, `ł`, `ń`, `ó`, `ś`, `ź`, `ż` oraz ich wielkimi odpowiednikami).
+   - Dopuszcza zapis notatki z pustą treścią, o ile pole tytułu zostało poprawnie wypełnione (krótka notatka-przypomnienie).
 
-2. **Zapisywanie notatek**:
-   - Zapisuje notatkę do lokalnego pliku tekstowego w czytelnym formacie Markdown z zachowaniem kodowania UTF-8.
-   - Do każdej zapisywanej notatki automatycznie przypisuje aktualną datę i godzinę jej utworzenia w formacie `YYYY-MM-DD HH:mm`.
-   - Zapewnia bezpieczny zapis danych chroniący przed uszkodzeniem lub wyzerowaniem dotychczasowej bazy notatek.
+2. **Zapisywanie notatek i kontrakt formatu danych**:
+   - Wszystkie notatki są zapisywane do jednego, lokalnego pliku tekstowego w czytelnym formacie Markdown z kodowaniem UTF-8 (zgodnie z decyzją architektoniczną ADR 0001).
+   - Każdy wpis w pliku posiada ustandaryzowaną strukturę: nagłówek Markdown drugiego stopnia z datą i tytułem (`## YYYY-MM-DD HH:mm — Tytuł`), po którym następuje pusta linia i treść notatki.
+   - Zapewnia bezpieczny zapis danych (zapis atomowy chroniący przed uszkodzeniem lub wyzerowaniem dotychczasowej bazy notatek w przypadku błędu dyskowego lub awarii zasilania).
+   - Bezpośrednio po udanym zapisie formularz dodawania notatki zostaje wyczyszczony (pola tytułu i treści stają się puste), kursor automatycznie powraca do pola tytułu, a przycisk zapisu wraca do stanu nieaktywnego.
 
 3. **Prezentacja listy notatek**:
-   - Wyświetla listę wszystkich zapisanych notatek użytkownika w oknie głównym programu.
+   - Wyświetla listę wszystkich zapisanych notatek użytkownika w lewym panelu okna głównego programu.
    - Prezentuje notatki w kolejności chronologicznej malejącej: najnowsza notatka znajduje się na samej górze listy.
-   - Każda pozycja na liście prezentuje co najmniej tytuł notatki oraz datę jej utworzenia.
+   - Każda pozycja na liście prezentuje tytuł notatki oraz sformatowaną datę i godzinę jej utworzenia.
    - Lista jest natychmiast aktualizowana po zapisaniu nowej notatki, bez konieczności przeładowywania programu.
 
 4. **Przeglądanie i podgląd wybranej notatki**:
    - Umożliwia wskazanie (kliknięcie) notatki na liście w celu wyświetlenia jej pełnego tytułu, daty oraz treści w dedykowanym panelu podglądu.
+   - Kliknięcie notatki na liście nie czyści ani nie niszczy tekstu aktualnie wprowadzanego przez użytkownika w formularzu nowej notatki (niezależne komponenty widoku).
+   - W stanie początkowym (przed wybraniem jakiejkolwiek notatki lub przy pustej liście) panel podglądu wyświetla komunikat informacyjny: *„Wybierz notatkę z listy, aby wyświetlić jej treść”*.
 
 5. **Walidacja danych wejściowych**:
-   - Blokuje możliwość zapisu notatki, jeśli pole tytułu jest puste lub zawiera wyłącznie białe znaki (spacje, tabulatory). W takim stanie przycisk zapisu jest nieaktywny.
+   - Blokuje możliwość zapisu notatki, jeśli pole tytułu jest puste lub zawiera wyłącznie białe znaki (spacje, tabulatory). W takim stanie przycisk zapisu jest wizualnie wyszarzony i nie reaguje na próby kliknięcia.
 
 6. **Polska warstwa językowa i obsługa błędów**:
-   - Wszystkie elementy interfejsu (etykiety pól, przyciski, nagłówki kolumn) oraz komunikaty o błędach i ostrzeżenia są wyświetlane w języku polskim.
+   - Wszystkie elementy interfejsu (etykiety pól, przyciski, nagłówki kolumn, teksty podpowiedzi) są wyświetlane w języku polskim.
+   - W przypadku wystąpienia błędu odczytu lub zapisu (np. brak uprawnień do pliku) program nie przerywa nagle swojego działania, lecz prezentuje czytelny komunikat informujący o naturze problemu w języku polskim w dedykowanym pasku informacyjnym okna.
 
 7. **Trwałość i szybki start**:
-   - Po ponownym uruchomieniu programu aplikacja otwiera się w czasie poniżej 2 sekund i automatycznie ładuje wszystkie wcześniej zapisane notatki.
+   - Po ponownym uruchomieniu programu aplikacja otwiera się w czasie poniżej 2 sekund i automatycznie ładuje wszystkie wcześniej zapisane notatki z lokalnego pliku.
 
 ---
 
@@ -69,9 +74,9 @@ Program jest przeznaczony dla:
 ## 5. Kryteria akceptacji
 
 ### Kryterium 1: Obsługa polskich znaków
-- **Sytuacja początkowa**: Program jest uruchomiony na komputerze użytkownika, otwarty jest pusty formularz tworzenia nowej notatki.
+- **Sytuacja początkowa**: Program jest uruchomiony na komputerze użytkownika, otwarty jest formularz tworzenia nowej notatki.
 - **Działanie użytkownika**: Użytkownik wprowadza w polu tytułu tekst zawierający wszystkie polskie znaki diakrytyczne: `Zażółć gęślą jaźń ZAŻÓŁĆ GĘŚLĄ JAŹŃ`, a w polu treści zdanie: `Pchnąć w tę łódź jeża lub ośm skrzyń fig`, po czym klika aktywny przycisk zapisu notatki.
-- **Oczekiwany rezultat**: Kiedy użytkownik zapisze notatkę z polskimi znakami, to na liście notatek, w panelu podglądu oraz w docelowym pliku tekstowym na dysku wszystkie znaki diakrytyczne są zachowane w kodowaniu UTF-8 i prezentowane bez zniekształceń, znaków zapytania czy błędnych symboli.
+- **Oczekiwany rezultat**: Kiedy użytkownik zapisze notatkę z polskimi znakami, to na liście notatek, w panelu podglądu oraz w docelowym pliku tekstowym na dysku wszystkie znaki diakrytyczne są zachowane w kodowaniu UTF-8 i prezentowane bez zniekształceń, zamiany na encje, znaków zapytania czy błędnych symboli.
 - **Sprawdzenie**: 
   1. Sprawdzić wzrokowo w oknie aplikacji, czy na liście notatek i w podglądzie tytuł i treść wyświetlają się poprawnie z polskimi literami.
   2. Otworzyć plik danych w zewnętrznym edytorze tekstu (np. Notatnik Windows) z wybranym kodowaniem UTF-8 i upewnić się, że zapisany tekst jest w 100% czytelny i identyczny z wprowadzonym.
@@ -79,28 +84,29 @@ Program jest przeznaczony dla:
 ### Kryterium 2: Aktualność listy notatek
 - **Sytuacja początkowa**: Program jest uruchomiony, na liście notatek wyświetlane są dotychczasowe wpisy (lub lista jest pusta przy pierwszym uruchomieniu).
 - **Działanie użytkownika**: Użytkownik wpisuje w formularzu unikalny tytuł `Notatka z godziny 12:00` oraz dowolną treść, a następnie klika przycisk zapisu.
-- **Oczekiwany rezultat**: Kiedy użytkownik zatwierdzi zapis notatki, to nowa notatka pojawia się natychmiast na samej górze listy notatek jako pierwsza pozycja, z właściwym tytułem i bieżącą datą, bez konieczności ponownego uruchamiania programu ani ręcznego odświeżania widoku.
+- **Oczekiwany rezultat**: Kiedy użytkownik zatwierdzi zapis notatki, to nowa notatka pojawia się natychmiast na samej górze listy notatek jako pierwsza pozycja, z właściwym tytułem i bieżącą datą, formularz dodawania zostaje wyczyszczony, kursor powraca do pola tytułu, a aktualizacja następuje bez konieczności ponownego uruchamiania programu ani manualnego odświeżania widoku.
 - **Sprawdzenie**: 
   1. Zaobserwować stan listy bezpośrednio po kliknięciu przycisku zapisu – liczba elementów na liście musi wzrosnąć dokładnie o jeden.
   2. Sprawdzić, czy pierwszy element od góry listy posiada tytuł `Notatka z godziny 12:00`.
+  3. Sprawdzić, czy pola tytułu i treści w formularzu stały się puste.
 
 ### Kryterium 3: Bezpieczeństwo zapisu
 - **Sytuacja początkowa**: Plik notatek na dysku zawiera już wcześniej zapisane notatki (np. 3 wpisy). Użytkownik przygotował nową, czwartą notatkę w formularzu.
 - **Działanie użytkownika**: Użytkownik klika przycisk zapisu notatki.
-- **Oczekiwany rezultat**: Kiedy następuje operacja zapisu, to program wykonuje ją w sposób chroniący integralność bazy danych – dotychczasowe 3 notatki pozostają w pliku nienaruszone, a nowy wpis zostaje dopisany na początku lub końcu struktury zgodnie z przyjętym formatem. W przypadku wystąpienia błędu dyskowego (np. brak praw do zapisu) program wyświetla czytelny komunikat po polsku, a dotychczasowy plik nie zostaje wyczyszczony ani uszkodzony.
+- **Oczekiwany rezultat**: Kiedy następuje operacja zapisu, to program wykonuje ją w sposób chroniący integralność bazy danych – dotychczasowe 3 notatki pozostają w pliku nienaruszone, a nowy wpis zostaje dodany zgodnie z przyjętym formatem. W przypadku wystąpienia błędu dyskowego (np. brak praw do zapisu) program nie ulega nagłemu zamknięciu, wyświetla czytelny komunikat po polsku w oknie, a dotychczasowy plik nie zostaje wyczyszczony ani uszkodzony.
 - **Sprawdzenie**: 
   1. Przed zapisem wykonać kopię pliku z 3 notatkami.
   2. Zapisać czwartą notatkę i sprawdzić, czy plik zawiera komplet 4 notatek.
-  3. Przetestować sytuację awaryjną (plik oznaczony atrybutem tylko do odczytu): sprawdzić, czy aplikacja wyświetla komunikat o błędzie po polsku i nie tworzy pustego pliku 0 bajtów.
+  3. Przetestować sytuację awaryjną (plik oznaczony atrybutem „Tylko do odczytu”): sprawdzić, czy aplikacja wyświetla komunikat o błędzie po polsku i nie pozostawia pustego pliku bez zawartości.
 
 ### Kryterium 4: Blokada zapisu pustej notatki
 - **Sytuacja początkowa**: Program jest uruchomiony, pole tytułu w formularzu nowej notatki jest puste (lub zawiera wyłącznie spacje/tabulatory), a pole treści zawiera dowolny tekst lub jest puste.
-- **Działanie użytkownika**: Użytkownik spogląda na przycisk zapisu notatki lub próbuje go kliknąć / wywołać zapis.
-- **Oczekiwany rezultat**: Kiedy pole tytułu jest puste lub zawiera wyłącznie białe znaki, to przycisk zapisu jest wizualnie i funkcjonalnie nieaktywny (zablokowany), kliknięcie w niego nie wywołuje żadnej akcji, plik na dysku nie ulega modyfikacji, a na liście notatek nie pojawia się żaden nowy element.
+- **Działanie użytkownika**: Użytkownik spogląda na przycisk zapisu notatki lub próbuje go kliknąć.
+- **Oczekiwany rezultat**: Kiedy pole tytułu jest puste lub zawiera wyłącznie białe znaki, to przycisk zapisu jest wizualnie wyszarzony i nieaktywny, kliknięcie w niego nie wywołuje żadnej akcji, plik na dysku nie ulega modyfikacji, a na liście notatek nie pojawia się żaden nowy element.
 - **Sprawdzenie**: 
-  1. Pozostawić pole tytułu puste, wpisać treść `Przykładowy tekst` i sprawdzić stan przycisku zapisu – zweryfikować właściwość zablokowania przycisku.
+  1. Pozostawić pole tytułu puste, wpisać treść `Przykładowy tekst` i sprawdzić stan przycisku zapisu – zweryfikować brak reakcji przycisku na kliknięcie oraz jego wyszarzony wygląd.
   2. Wpisać do pola tytułu ciąg spacji `   ` – zweryfikować, czy przycisk nadal pozostaje nieaktywny.
-  3. Wpisać co najmniej jeden znak niebędący białym znakiem (np. `A`) – upewnić się, że przycisk natychmiast staje się aktywny.
+  3. Wpisać co najmniej jeden widoczny znak w tytule (np. literę `A`) – upewnić się, że przycisk natychmiast staje się aktywny.
 
 ### Kryterium 5: Działanie po ponownym uruchomieniu
 - **Sytuacja początkowa**: Użytkownik dodał i zapisał w programie dwie notatki testowe, po czym zamknął program.
@@ -111,25 +117,28 @@ Program jest przeznaczony dla:
   2. Sprawdzić, czy obie wcześniej dodane notatki są widoczne na liście z poprawnymi tytułami i datami.
   3. Wybrać każdą z notatek i upewnić się, że treść w panelu podglądu jest w 100% zgodna z zapisaną przed zamknięciem.
 
-### Kryterium 6: Podgląd wybranej notatki
-- **Sytuacja początkowa**: Na liście notatek znajdują się co najmniej dwie różne notatki. Panel podglądu jest pusty lub wyświetla wcześniej wybraną notatkę.
+### Kryterium 6: Podgląd wybranej notatki i ochrona szkicu
+- **Sytuacja początkowa**: Na liście notatek znajdują się co najmniej dwie różne notatki. W formularzu tworzenia notatki użytkownik wpisał roboczy tytuł `Mój szkic`.
 - **Działanie użytkownika**: Użytkownik klika lewym przyciskiem myszy na wybraną pozycję na liście notatek.
-- **Oczekiwany rezultat**: Kiedy użytkownik wskaże notatkę na liście, to w panelu podglądu natychmiast pojawia się pełny tytuł, data utworzenia oraz pełna treść wybranej notatki.
-- **Sprawdzenie**: Kliknąć pierwszą notatkę, a następnie drugą notatkę na liście i sprawdzić, czy panel podglądu natychmiast aktualizuje wyświetlaną treść do odpowiadającej klikniętemu wpisowi.
+- **Oczekiwany rezultat**: Kiedy użytkownik wskaże notatkę na liście, to w panelu podglądu natychmiast pojawia się pełny tytuł, data utworzenia oraz pełna treść wybranej notatki, a roboczy tekst `Mój szkic` w formularzu tworzenia nowej notatki pozostaje nienaruszony.
+- **Sprawdzenie**: Wpisać tekst do formularza, kliknąć notatkę na liście i sprawdzić: (a) czy panel podglądu zaktualizował się do wybranej notatki, (b) czy formularz nadal zawiera wpisany wcześniej roboczy tekst.
 
 ---
 
 ## 6. Do ustalenia
 
-W toku analizy wymagań zidentyfikowano następujące kwestie otwarte, które wymagają decyzji produktowej:
+W toku analizy wymagań oraz po niezależnym przeglądzie Pierwszego Czytelnika wyodrębniono następujące kwestie otwarte:
 
-1. **[DO USTALENIA]: Dopuszczalność pustej treści notatki przy wypełnionym tytule**:
-   - Czy użytkownik może zapisać notatkę, która posiada tytuł, ale jej pole treści pozostało całkowicie puste? (Wersja rekomendowana: zezwolić na pustą treść, gdyż sam tytuł może pełnić rolę szybkiego przypomnienia typu „Kupić mleko”).
-2. **[DO USTALENIA]: Domyślna lokalizacja i nazwa pliku z notatkami**:
-   - Gdzie dokładnie ma znajdować się plik notatek na dysku użytkownika: czy w bieżącym katalogu roboczym programu jako `notatki.md`, czy w dedykowanym katalogu użytkownika (np. standardowy folder Dokumenty w systemie operacyjnym)?
-3. **[DO USTALENIA]: Sposób prezentacji treści w panelu podglądu**:
-   - Czy panel podglądu powinien renderować znaczniki Markdown (nagłówki, pogrubienia, listy wypunktowane) w postaci sformatowanego widoku wizualnego, czy wyświetlać czysty tekst Markdown dokładnie tak, jak został wpisany przez użytkownika?
-4. **[DO USTALENIA]: Zachowanie w przypadku zewnętrznej modyfikacji pliku**:
-   - Jak program powinien zachować się, jeśli użytkownik zmodyfikuje plik `notatki.md` w zewnętrznym edytorze (np. Notatnik Windows) w czasie, gdy aplikacja jest uruchomiona – czy lista powinna automatycznie wykrywać zmiany na dysku i odświeżać widok, czy odczyt następuje wyłącznie przy starcie programu?
-5. **[DO USTALENIA]: Limit długości tytułu i treści notatki**:
-   - Czy tytuł notatki powinien mieć sztywny limit znaków (np. maksymalnie 200 znaków) ze względu na czytelność listy, czy pozostawać bez ograniczeń długości?
+1. **[DO USTALENIA]: Domyślna lokalizacja pliku danych notatek**:
+   - *Wariant A*: Plik danych umieszczony w bieżącym katalogu roboczym obok programu (maksymalna przenośność, łatwy dostęp).
+   - *Wariant B*: Plik danych w standardowym folderze `Dokumenty` bieżącego użytkownika systemu operacyjnego (bezpieczeństwo przed skasowaniem przy aktualizacji programu).
+2. **[DO USTALENIA]: Sposób prezentacji treści w panelu podglądu**:
+   - *Wariant A*: Renderowanie wizualne znaczników Markdown (nagłówki, listy, pogrubienia) w postaci sformatowanej.
+   - *Wariant B*: Prezentacja czystego tekstu Markdown dokładnie tak, jak został wpisany (maksymalna prostota i transparentność).
+3. **[DO USTALENIA]: Zachowanie w przypadku zewnętrznej modyfikacji pliku danych**:
+   - *Wariant A*: Odczyt pliku następuje wyłącznie podczas uruchamiania programu oraz po operacji zapisu z poziomu aplikacji.
+   - *Wariant B*: Aplikacja w tle automatycznie wykrywa zmiany wprowadzone w pliku z zewnątrz i odświeża listę, jeśli plik został zmodyfikowany przez inny edytor tekstu.
+4. **[DO USTALENIA]: Obsługa skrótów klawiszowych**:
+   - Czy program ma obsługiwać globalny skrót zapisu (`Ctrl+S`) oraz przejście klawiszem Tab / Enter między polami formularza?
+5. **[DO USTALENIA]: Limit długości tytułu notatki**:
+   - Czy pole tytułu powinno posiadać sztywny limit znaków (np. 150 znaków), aby zapobiec zaburzeniu czytelności elementów listy?

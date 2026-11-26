@@ -2,7 +2,7 @@
 
 Projekt aplikacji desktopowej **Notatnik-V2** tworzony z myślą o przyszłej implementacji w technologii **C#**, **.NET**, **Avalonia UI** (https://avalonia.app/) oraz **XAML** (`.axaml`).
 
-Na obecnym etapie repozytorium zawiera dokumentację architektoniczną i projektową (konstytucję projektu, rejestr decyzji architektonicznych ADR oraz pełną specyfikację modułu notatnika wraz z planem i zadaniami) – przygotowaną zgodnie z metodyką Spec-Driven Development.
+Na obecnym etapie repozytorium zawiera pełną dokumentację architektoniczną i projektową (konstytucję projektu, rejestr decyzji architektonicznych ADR oraz pełną specyfikację modułu notatnika wraz z planem technicznym i zadaniami po przeglądzie Pierwszego Czytelnika) – przygotowaną zgodnie z metodyką Spec-Driven Development.
 
 ---
 
@@ -87,23 +87,24 @@ Poniższe zestawienie stanowi przekształcenie pięciu potocznych, niejednoznacz
 
 ### 2. „Lista notatek jest zawsze aktualna.”
 - **Sytuacja**: Program jest uruchomiony i prezentuje dotychczas zapisaną listę notatek. Użytkownik wprowadza nową notatkę z unikalnym tytułem `Notatka testowa aktualności` i klika przycisk zapisu.
-- **Kryterium**: **Kiedy** nastąpi pomyślny zapis nowej notatki, **to** nowo utworzona notatka pojawia się natychmiast na samej górze listy notatek (pozycja indeksu 0) z właściwym tytułem i datą, bez konieczności ponownego uruchamiania aplikacji ani manualnego odświeżania widoku przez użytkownika.
+- **Kryterium**: **Kiedy** nastąpi pomyślny zapis nowej notatki, **to** nowo utworzona notatka pojawia się natychmiast na samej górze listy notatek (pozycja indeksu 0) z właściwym tytułem i datą, formularz dodawania zostaje wyczyszczony, a kursor powraca do pola tytułu bez konieczności ponownego uruchamiania aplikacji ani manualnego odświeżania widoku przez użytkownika.
 - **Sprawdzenie**: 
   1. Zaobserwować stan listy bezpośrednio po kliknięciu przycisku zapisu – całkowita liczba elementów na liście musi wzrosnąć dokładnie o jeden.
   2. Sprawdzić, czy pierwszy element od góry listy posiada tytuł wpisany w formularzu oraz aktualny znacznik czasu.
+  3. Upewnić się, że pola tytułu i treści w formularzu zostały wyczyszczone do stanu pustego.
 
 ### 3. „Zapis jest bezpieczny.”
 - **Sytuacja**: Na dysku istnieje plik zawierający wcześniejsze notatki użytkownika. Następuje operacja zapisu nowej notatki lub dochodzi do błędu środowiskowego podczas operacji zapisu (np. brak uprawnień zapisu do pliku, symulacja awarii I/O).
-- **Kryterium**: **Kiedy** użytkownik wykonuje zapis notatki, **to** program wykonuje operację w sposób gwarantujący nienaruszalność dotychczasowych wpisów – wcześniejsze notatki nie ulegają skasowaniu ani uszkodzeniu, a w sytuacji błędu zapisu aplikacja nie ulega awarii (brak crashu), lecz wyświetla czytelny komunikat po polsku, pozostawiając istniejący plik danych w nienaruszonym stanie (brak pliku pustego / zerobajtowego).
+- **Kryterium**: **Kiedy** użytkownik wykonuje zapis notatki, **to** program wykonuje operację w sposób gwarantujący nienaruszalność dotychczasowych wpisów – wcześniejsze notatki nie ulegają skasowaniu ani uszkodzeniu, a w sytuacji błędu zapisu aplikacja nie ulega niespodziewanemu zamknięciu (brak awarii), lecz wyświetla czytelny komunikat po polsku w oknie, pozostawiając istniejący plik danych w nienaruszonym stanie (brak pliku pustego bez zawartości).
 - **Sprawdzenie**: 
   1. Sprawdzić plik bazy przed i po normalnym zapisie nowej notatki – plik musi zawierać wszystkie wcześniejsze wpisy powiększone o nowy wpis.
-  2. Zasymulować blokadę pliku (np. ustawienie atrybutu „Tylko do odczytu” lub blokada praw zapisu) i kliknąć przycisk zapisu – zweryfikować, czy aplikacja wyświetliła polski komunikat o błędzie zapisu, a zawartość oryginalnego pliku pozostała w 100% nienaruszona.
+  2. Zasymulować blokadę pliku (np. ustawienie atrybutu „Tylko do odczytu” lub zablokowanie uprawnień) i kliknąć przycisk zapisu – zweryfikować, czy aplikacja wyświetliła polski komunikat o błędzie zapisu, a zawartość oryginalnego pliku pozostała w 100% nienaruszona.
 
 ### 4. „Pusta notatka nie jest zapisywana.”
 - **Sytuacja**: Formularz tworzenia notatki posiada puste pole tytułu lub pole tytułu wypełnione wyłącznie białymi znakami (spacje, tabulatory), niezależnie od tego, czy pole treści zawiera tekst, czy jest puste.
-- **Kryterium**: **Kiedy** pole tytułu notatki jest puste lub zawiera wyłącznie białe znaki, **to** przycisk zapisu notatki jest zablokowany (stan nieaktywny / disabled), próba jego kliknięcia nie wywołuje żadnej akcji, plik danych na dysku nie zostaje zmodyfikowany, a na liście notatek nie pojawia się pusty wpis.
+- **Kryterium**: **Kiedy** pole tytułu notatki jest puste lub zawiera wyłącznie białe znaki, **to** przycisk zapisu notatki jest zablokowany (stan wyszarzony, brak reakcji na kliknięcie), próba jego kliknięcia nie wywołuje żadnej akcji, plik danych na dysku nie zostaje zmodyfikowany, a na liście notatek nie pojawia się pusty wpis.
 - **Sprawdzenie**: 
-  1. Wyczyścić pole tytułu, wprowadzić dowolny tekst w polu treści i sprawdzić stan przycisku zapisu – przycisk musi być nieaktywny.
+  1. Wyczyścić pole tytułu, wprowadzić dowolny tekst w polu treści i sprawdzić stan przycisku zapisu – przycisk musi być wyszarzony i nie reagować na kliknięcia.
   2. Wpisać w polu tytułu same spacje `    ` – przycisk musi pozostać nieaktywny.
   3. Wpisać co najmniej jeden widoczny znak w tytule (np. literę `X`) – upewnić się, że przycisk natychmiast staje się aktywny.
 
@@ -115,7 +116,7 @@ Poniższe zestawienie stanowi przekształcenie pięciu potocznych, niejednoznacz
   2. Sprawdzić, czy lista notatek zawiera dokładnie taką samą liczbę notatek, jaka została zapisana przed zamknięciem.
   3. Kliknąć w każdą notatkę na liście i upewnić się, że panel podglądu wiernie prezentuje jej pierwotną treść.
 
-*(Uwaga: Kwestie wymagające doprecyzowania, np. dopuszczalność pustej treści przy wypełnionym tytule czy domyślna ścieżka pliku, zostały wyekstrahowane do sekcji „Do ustalenia” w pliku `specs/001-notatnik/spec.md`).*
+*(Uwaga: Kwestie wymagające doprecyzowania, np. domyślna lokalizacja pliku czy renderowanie Markdown, zostały wyekstrahowane do sekcji „Do ustalenia” w pliku `specs/001-notatnik/spec.md`).*
 
 ---
 
@@ -148,10 +149,10 @@ Trafiają tu wyłącznie niezmienne, nienegocjowalne fundamenty architektoniczne
 ### 2. `specs/001-notatnik/spec.md` (Co ma powstać, dla kogo, czego nie robi i po czym poznamy, że działa?)
 Trafiają tu wymagania funkcjonalne i kryteria akceptacji opisane z perspektywy użytkownika końcowego (bez nazw klas i bibliotek kodu):
 - Cel programu i charakterystyka grupy docelowej.
-- Zakres funkcjonalny: formularz z polami tytułu i treści, lista notatek sortowana od najnowszej, panel podglądu wybranej notatki.
+- Zakres funkcjonalny: formularz z polami tytułu i treści, lista notatek sortowana od najnowszej, panel podglądu wybranej notatki ze stanem pustym, cykl formularza po zapisie.
 - Granice systemu (czego program NIE robi): brak wyszukiwania w v001, brak edycji/usuwania z UI w v001, brak załączników, brak kont.
-- Mierzalne kryteria akceptacji w formacie „Kiedy ..., to ...” ze „Sprawdzenie: ...” (blokada przycisku przy pustym tytule, polskie znaki, aktualność listy, bezpieczny zapis, start w < 2s).
-- Sekcja pytań otwartych [DO USTALENIA] (np. dopuszczalność pustej treści, domyślna ścieżka pliku).
+- Mierzalne kryteria akceptacji w formacie „Kiedy ..., to ...” ze „Sprawdzenie: ...” (blokada przycisku przy pustym tytule, polskie znaki, aktualność listy, bezpieczny zapis, start w < 2s, podgląd z zachowaniem szkicu).
+- Sekcja pytań otwartych [DO USTALENIA] (np. domyślna ścieżka pliku, renderowanie Markdowna).
 
 ### 3. `specs/001-notatnik/plan.md` (Jak to zbudować i jakie pliki będą potrzebne?)
 Trafiają tu decyzje czysto techniczne, architektoniczne i strukturalne:
@@ -190,23 +191,45 @@ W pierwotnym, jednolitym prompcie z pokazu brakowało przede wszystkim dedykowan
    Przeskok bezpośrednio z ogólnego pomysłu do generowania kodu sprawił, że niezależni agenci tworzyli zupełnie odmienne, niekompatybilne implementacje. Jeden agent stosował serializację JSON, inny tworzył bazę SQLite (łamiąc wymóg czytelności w notatniku), a kolejny ignorował obsługę polskich znaków diakrytycznych.
 
 ### Odniesienie do rejestru decyzji (`DECISIONS.md`)
-W strukturze bieżącego repozytorium nie występuje plik `DECISIONS.md` dokumentujący bezpośrednie próby trzech agentów (nie generujemy sztucznych cytatów). Znajduje się tu natomiast formalna decyzja architektoniczna [`decyzje/0001-format-pliku-notatek.md`](file:///c:/Users/gorka.maksymilian/Documents/4.3-Specyfikacjanotatnikaijejpierwszyczytelnik-4ta-2-Maksymilian-G/decyzje/0001-format-pliku-notatek.md), która dokładnie obrazuje skutki tego zjawiska:
+W strukturze bieżącego repozytorium nie występuje plik `DECISIONS.md` dokumentujący bezpośrednie próby trzech agentów (zgodnie z instrukcją nie generujemy sztucznych cytatów). Znajduje się tu natomiast formalna decyzja architektoniczna [`decyzje/0001-format-pliku-notatek.md`](file:///c:/Users/gorka.maksymilian/Documents/4.3-Specyfikacjanotatnikaijejpierwszyczytelnik-4ta-2-Maksymilian-G/decyzje/0001-format-pliku-notatek.md), która dokładnie obrazuje skutki tego zjawiska:
 - Wskazuje ona, że brak jednoznacznej specyfikacji formatu i parsera w poprzedniej wersji aplikacji (Budowa 2, zadanie 3.2) doprowadził do błędu parsowania nagłówków Markdown `##`, konieczności niebezpiecznego przepisywania całego pliku w pamięci (`File.ReadAllText` / `File.WriteAllText`) oraz braku odporności na awarie zasilania.
 - Potwierdza to fundamentalną regułę procesu inżynierii oprogramowania: **najpierw precyzyjna specyfikacja i konstytucja, dopiero potem plan, zadania i kod**.
 
 ---
 
-## 7. Aktualna struktura dokumentacji repozytorium
+## 7. Przegląd Pierwszego Czytelnika (niezależna recenzja i wdrożone poprawki)
+
+Zgodnie z metodyką projektu, po opracowaniu pierwszej wersji specyfikacji funkcjonalnej przeprowadzono **niezależny przegląd Pierwszego Czytelnika**. Do przeglądu uruchomiono osobną, izolowaną sesję agenta AI, której przekazano **wyłącznie dwa dokumenty**: `konstytucja.md` oraz `specs/001-notatnik/spec.md`.
+
+### Ustalenia Pierwszego Czytelnika
+1. **Wykryte wycieki techniczne**: Recenzent wskazał użycie żargonu systemowego („file watcher”, „brak crashu”, „zweryfikować właściwość zablokowania przycisku”, przedwczesne powoływanie się na nazwę pliku `notatki.md`).
+2. **Krytyczne luki funkcjonalne**:
+   - Brak określenia cyklu życia formularza po zapisie (czyszczenie pól, fokus).
+   - Brak sprecyzowania relacji między formularzem a podglądem (ochrona wprowadzanego szkicu przy przeglądaniu listy).
+   - Brak definicji stanów pustych (Empty States) podglądu przy braku selekcji.
+   - Niejednoznaczność schematu wpisu Markdown w specyfikacji.
+
+### Wdrożone poprawki (COMMIT 2)
+Wszystkie uwagi Pierwszego Czytelnika zostały przeanalizowane i wdrożone w specyfikacji, planie oraz zadaniach:
+- Oczyszczono specyfikację z żargonu programistycznego, zastępując go opisem czysto behawioralnym.
+- Zdefiniowano pełny cykl formularza: natychmiastowe czyszczenie pól po zapisie, powrót kursora do pola tytułu i powrót przycisku do stanu nieaktywnego.
+- Dodano kryterium akceptacji nr 6 gwarantujące niezależność podglądu i formularza (ochrona szkicu).
+- Zdefiniowano stan początkowy podglądu z polskim komunikatem informacyjnym.
+- Ustandaryzowano kontrakt danych w `spec.md` i `plan.md` w ścisłej zgodności z ADR 0001.
+
+---
+
+## 8. Aktualna struktura dokumentacji repozytorium
 
 ```text
 notatnik-v2/
 ├── konstytucja.md                     # Nadrzędne, niezmienne reguły projektu
-├── README.md                          # Kryteria akceptacji, analiza promptu i dekompozycja
+├── README.md                          # Kryteria akceptacji, analiza promptu, przegląd Pierwszego Czytelnika
 ├── decyzje/
 │   └── 0001-format-pliku-notatek.md   # Decyzja architektoniczna dotycząca formatu Markdown UTF-8
 └── specs/
     └── 001-notatnik/
-        ├── spec.md                    # Specyfikacja funkcjonalna z 6 wymaganymi sekcjami
+        ├── spec.md                    # Specyfikacja funkcjonalna z 6 wymaganymi sekcjami po przeglądzie
         ├── plan.md                    # Plan techniczny i audyt zgodności z Konstytucją
         └── tasks.md                   # Atomowe zadania implementacyjne (T01-T08)
 ```
